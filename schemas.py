@@ -1,48 +1,52 @@
 """
-Database Schemas
+Database Schemas for Animal Home
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Each Pydantic model represents a MongoDB collection. The collection name is the lowercase of the class name.
 """
+from typing import List, Optional, Literal
+from pydantic import BaseModel, Field, EmailStr
 
-from pydantic import BaseModel, Field
-from typing import Optional
+# Animals available for adoption
+class Animal(BaseModel):
+    name: str = Field(..., description="Animal name")
+    species: Literal["dog", "cat", "rabbit", "bird", "other"] = Field(..., description="Animal type/species")
+    breed: Optional[str] = Field(None, description="Breed or mix")
+    age: int = Field(..., ge=0, le=40, description="Age in years")
+    size: Literal["small", "medium", "large", "xlarge"] = Field(..., description="Approximate size")
+    gender: Optional[Literal["male", "female"]] = Field(None, description="Gender")
+    description: Optional[str] = Field(None, description="Short bio/temperament")
+    photos: List[str] = Field(default_factory=list, description="Image URLs")
+    featured: bool = Field(default=False, description="Show in featured list")
+    location: Optional[str] = Field(None, description="Shelter/city")
+    good_with_kids: Optional[bool] = None
+    good_with_pets: Optional[bool] = None
 
-# Example schemas (replace with your own):
+# Adoption applications
+class Application(BaseModel):
+    animal_id: str = Field(..., description="Target animal document id")
+    full_name: str
+    email: EmailStr
+    phone: Optional[str] = None
+    message: Optional[str] = None
 
-class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+# Success stories shared by the shelter
+class Story(BaseModel):
+    title: str
+    animal_name: Optional[str] = None
+    content: str
+    image_url: Optional[str] = None
 
-class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+# Volunteer interest submissions
+class Volunteer(BaseModel):
+    full_name: str
+    email: EmailStr
+    interests: List[str] = Field(default_factory=list)
+    availability: Optional[str] = None
+    message: Optional[str] = None
 
-# Add your own schemas here:
-# --------------------------------------------------
-
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+# Donation pledges (no payment processor in demo)
+class Donation(BaseModel):
+    full_name: str
+    email: Optional[EmailStr] = None
+    amount: float = Field(..., gt=0)
+    message: Optional[str] = None
